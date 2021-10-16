@@ -1,0 +1,40 @@
+{
+  "navs": [
+    {
+      "key": "overview",
+      "name": "概览",
+      "type": "xml",
+      "asset": "overview.xml"
+    },
+    {
+      "key": "detail",
+      "name": "详情",
+      "children": [
+        {
+          "key": "branch",
+          "name": "Branch 信息",
+          "type": "xml",
+          "asset": "branch.xml"
+        },
+        {
+          "key": "commit",
+          "name": "commit 信息",
+          "type": "xml",
+          "asset": "commit.xml"
+        },
+        {
+          "key": "pull_request",
+          "name": "Pull Request 信息",
+          "type": "xml",
+          "asset": "pull_request.xml"
+        }
+      ]
+    },
+    {
+      "key": "help",
+      "name": "帮助",
+      "type": "xml",
+      "asset": "help.xml"
+    }
+  ]
+}

@@ -1,0 +1,160 @@
+<dashboard
+  theme="$operationBarToken.theme$"
+  refresh-interval="$operationBarToken.refreshInterval$"
+  scale-on-fullscreen="$operationBarToken.scaleOnFullscreen$"
+  time="$operationBarToken.time$"
+>
+  <operation-bar token="operationBarToken">
+    <title>overview</title>
+    <description>
+      展示KODO业务线质效相关数据，如打回率，缺陷遗失率，测试覆盖率等质效数据
+    </description>
+    <initial-value>
+      <theme>light</theme>
+      <refresh-interval>h2</refresh-interval>
+      <time>
+        <earliest>allTime</earliest>
+      </time>
+      <hide-on-fullscreen>false</hide-on-fullscreen>
+      <scale-on-fullscreen>[0,0]</scale-on-fullscreen>
+      <layout-options>
+        <gap-x>10</gap-x>
+        <gap-y>10</gap-y>
+        <cols>48</cols>
+        <row-height>30</row-height>
+      </layout-options>
+    </initial-value>
+  </operation-bar>
+  <collapsible-panel id="variables-panel" header="模版变量" bordered="false">
+    <row class="global-variables-row" type="split">
+      <input type="dropdown" token="day">
+        <label>天数</label>
+        <initial-value>30</initial-value>
+        <choice value="30">30</choice>
+      </input>
+      <input type="time-interval" token="interval">
+        <label>时间间隔</label>
+        <initial-value>1M</initial-value>
+      </input>
+      <input type="multiselect" token="priority">
+        <label>新增外部缺陷优先级</label>
+        <initial-value>["*"]</initial-value>
+        <search>
+          <query>
+            sourcetype="jira_issue_all" AND repo="jira_issue_all" AND ("缺陷")
+| stats latest(priority) by priority
+| fields priority
+| sort by priority asc
+          </query>
+        </search>
+        <field-for-label>priority</field-for-label>
+        <field-for-value>priority</field-for-value>
+        <value-prefix>"</value-prefix>
+        <value-suffix>"</value-suffix>
+        <delimiter>,</delimiter>
+      </input>
+      <input type="multiselect" token="prowcomponents">
+        <label>prowcomponents</label>
+        <initial-value>["*"]</initial-value>
+        <search>
+          <query>
+            sourcetype="jira_issue_all" AND repo="jira_issue_all"
+| where in (issuetype,"prow")
+| stats latest(components) by components
+| fields components
+          </query>
+        </search>
+        <field-for-label>components</field-for-label>
+        <field-for-value>components</field-for-value>
+        <value-prefix>"</value-prefix>
+        <value-suffix>"</value-suffix>
+        <delimiter>,</delimiter>
+      </input>
+    </row>
+    <row class="global-variables-row" type="split">
+      <input type="multiselect" token="assignee">
+        <label>assignee人员</label>
+        <initial-value>
+          ["*", "lijinglin", "shijiayun", "guojia", "wangting", "hushijie", "xueyibing", "liangchao", "maweiwei", "wangke", "zhujianghua", "lixin", "jiangwenlong", "wenwuhan", "lidecheng", "tongjunjie", "wenxiaofang", "yinxulai", "zhangyongjiang", "wuwensheng", "liangsongtao", "liubin", "fengliyuan", "macichong", "wanfadong", "zhourong", "maolifu", "zhaomei", "duhongwei", "zhangyunzhe", "yuzhai", "renweifeng", "huangbinjie", "zengliang", "yangsen", "zhangyuanhang", "huliang", "caomingming", "zhangheng01", "kodo", "yanghanxing", "qinxuan", "zhangbing", "haohaiwei", "tangweichao", "sunnemin", "yangyanan", "lizhifeng", "jiangheng", "caixiaohua", "chupei"]
+        </initial-value>
+        <search>
+          <query>
+            sourcetype="jira_issue_all" AND repo="jira_issue_all" AND "KODO" AND projectname in ("KODO")
+| where in (issuetype,"bug","缺陷")
+| stats latest(assignee) by assignee
+| fields assignee
+          </query>
+        </search>
+        <field-for-label>assignee</field-for-label>
+        <field-for-value>assignee</field-for-value>
+        <value-prefix>"</value-prefix>
+        <value-suffix>"</value-suffix>
+        <delimiter>,</delimiter>
+      </input>
+    </row>
+  </collapsible-panel>
+  <grid-layout options="$operationBarToken.layoutOptions$">
+    <layout top="0" left="0" width="48" height="13">
+      <row class="chart-variables-row" style="flex-shrink: 0;" />
+      <chart style="height: 0; flex: 1 1 0px;" type="line">
+        <id>e46655cc-91bf-4f82-b29c-a78568a272d3</id>
+        <title>
+          <name>单测覆盖率趋势图</name>
+        </title>
+        <hide-header>false</hide-header>
+        <search>
+          <query>
+            sourcetype="prow_ut_coverage"  AND (repo="ut_cover" OR repo="travis_ut_cover")  AND total AND file="total:"
+| eval datasource_one=split(origin, "/")
+| eval datasource_one_len=arr_len(datasource_one)
+| eval datasource_two=if((repo="travis_ut_cover"), split(arr_index(datasource_one,0), "\."), split(arr_index(datasource_one,datasource_one_len-1), "#")) 
+| eval datasource_two_len=arr_len(datasource_two)
+| where datasource_two_len==7
+| eval spec_namespace=arr_index(datasource_two,0),spec_repo=arr_index(datasource_two,1),spec_baseref=arr_index(datasource_two,2),spec_type=arr_index(datasource_two,3),spec_job=arr_index(datasource_two,4),status_buildid=arr_index(datasource_two,5),jobstarttime=rtrim(arr_index(datasource_two,6), ".txt")
+|where ( in (spec_namespace,"jobs")==true AND in (spec_repo,"kodo")==true  AND in (spec_baseref,"develop")==true  AND in (spec_type,"periodic","presubmit","postsubmit")==true AND in (spec_job,"kodo-postsubmits-go-ut-coverage")==true)
+| eval job_starttime=toReadableTime(jobstarttime, "yyyy-MM-dd HH:mm:ss")
+| stats count() by spec_namespace,spec_repo,spec_baseref,spec_type,spec_job,status_buildid,job_starttime,file,cov,_time,jobstarttime
+| eval covresult=toNumber(rtrim(cov, "%"))
+| fields job_starttime,spec_namespace,spec_repo,spec_baseref,spec_type,spec_job,status_buildid,covresult,_time,jobstarttime
+| sort by jobstarttime asc
+          </query>
+          <collect-size>-1</collect-size>
+          <limit>10</limit>
+        </search>
+        <legend>
+          <position>top</position>
+          <metrics>[]</metrics>
+        </legend>
+        <groups>["spec_type", "spec_job"]</groups>
+        <x-axis>
+          <field>job_starttime</field>
+          <label-rotation>0</label-rotation>
+          <label-show-mode>showauto</label-show-mode>
+          <hide-name>true</hide-name>
+          <unit>["none", "short"]</unit>
+          <precision>2</precision>
+        </x-axis>
+        <y-axis>
+          <fields>["covresult"]</fields>
+          <hide-name>true</hide-name>
+          <scale>linear</scale>
+          <unit>["none", "percent"]</unit>
+          <precision>2</precision>
+          <y-empty-value-mode>line</y-empty-value-mode>
+        </y-axis>
+        <y2-axis>
+          <fields>[]</fields>
+          <hide-name>true</hide-name>
+          <unit>["none", "short"]</unit>
+          <precision>2</precision>
+          <y2-buckets>[]</y2-buckets>
+          <y2-line-data-config>[]</y2-line-data-config>
+          <y-empty-value-mode>0</y-empty-value-mode>
+        </y2-axis>
+        <option name="style.stackMode">none</option>
+        <option name="style.mergeType">newest</option>
+        <option name="style.smoothLine">false</option>
+      </chart>
+    </layout>
+  </grid-layout>
+</dashboard>

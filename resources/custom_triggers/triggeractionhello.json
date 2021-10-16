@@ -1,0 +1,6 @@
+{
+  "name": "hello_trigger_chupei",
+  "displayName": "hello触发方式",
+  "env": "python3",
+  "filename": "trigger_action_example.py"
+}
