@@ -1,0 +1,6 @@
+{
+  "name": "sample_chupei",
+  "type": "centralized",
+  "env": "python3",
+  "filename": "spl_example.py"
+}
