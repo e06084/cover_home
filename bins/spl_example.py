@@ -24,7 +24,7 @@ class SplExample(SplStreamingBatchCommand):
     @staticmethod
     def handle_lines(lines):
         for line in lines:
-            line['number'] = 100
+            line['number'] = 10
         return lines
 
 
